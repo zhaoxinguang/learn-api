@@ -11,15 +11,16 @@ from app import models
 from app.routers import todos, users
 from app.core.exceptions import http_exception_handler, validation_exception_handler
 from app.core.middleware import log_requests
+from app.core.config import settings
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=settings.log_level,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Todo API")
+app = FastAPI(title=settings.app_name)
 
 # 中间件
 app.middleware("http")(log_requests)

@@ -1,11 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from pwdlib import PasswordHash
 import jwt
-
-# ⚠️ 生产环境一定要从环境变量读，别硬编码
-SECRET_KEY = "change-me-in-production-please"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+from app.core.config import settings
 
 
 pwd_context = PasswordHash.recommended()
@@ -18,12 +14,12 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def create_access_token(user_id: int) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
     payload = {"sub": str(user_id), "exp": expire}
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 
 def decode_access_token(token: str) -> int:
     """返回 user_id；失败抛 jwt 的异常"""
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
     return int(payload["sub"])
