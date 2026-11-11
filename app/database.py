@@ -1,10 +1,9 @@
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
-
-SQLALCHEMY_DATABASE_URL = "sqlite:///./todo.db"
+from app.core.config import settings
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
+    settings.database_url,
     connect_args={"check_same_thread": False},
     # --- 下面是连接池扩容 ---
     pool_size=20,        # 平时保持 20 个连接
@@ -13,8 +12,15 @@ engine = create_engine(
     pool_recycle=1800,   # 连接 30 分钟回收一次
 )
 
+def sqlite_pragmas(dbapi_connection, connection_record):
+    cur = dbapi_connection.cursor()
+    cur.execute("PRAGMA journal_mode=WAL")
+    cur.execute("PRAGMA busy_timeout=5000")
+    cur.execute("PRAGMA foreign_keys=ON")
+    cur.close()
+    
+event.listen(engine, "connect", sqlite_pragmas)
 # 开启 WAL 模式（提升读写并发）
-@event.listens_for(engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA journal_mode=WAL")
