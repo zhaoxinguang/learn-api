@@ -41,7 +41,7 @@ class TodoOut(BaseModel):
 
 class UserCreate(BaseModel):
     username: str = Field(min_length=3, max_length=50)
-    password: str = Field(min_length=6, max_length=72)   # bcrypt 上限 72 字节
+    password: str = Field(min_length=6, max_length=128)   # 限制长度，避免超长输入
 
 
 class UserOut(BaseModel):
@@ -54,5 +54,3 @@ class UserOut(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
-
-model_config = {"from_attributes": True}  

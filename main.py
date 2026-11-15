@@ -8,8 +8,6 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import engine, Base
-from app import models
 from app.routers import todos, users
 from app.core.exceptions import http_exception_handler, validation_exception_handler
 from app.core.middleware import log_requests

@@ -8,7 +8,7 @@ def test_register_ok(client):
 def test_register_duplicate(client):
     client.post("/users/register", json={"username": "alice", "password": "secret123"})
     r = client.post("/users/register", json={"username": "alice", "password": "secret123"})
-    assert r.status_code == 400                # 下周会改成 409，这个用例到时候先红后绿
+    assert r.status_code == 409                # 资源冲突：用户名已存在
 
 
 def test_login_wrong_password(client):

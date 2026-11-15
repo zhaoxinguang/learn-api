@@ -1,7 +1,7 @@
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-BASE_DIR = Path(__file__).resolve().parents[2]   # E:\learn-api
+BASE_DIR = Path(__file__).resolve().parents[2]   # 项目根目录
 
 
 class Settings(BaseSettings):
@@ -19,6 +19,4 @@ class Settings(BaseSettings):
     database_url: str = f"sqlite:///{(BASE_DIR / 'todo.db').as_posix()}"
     log_level: str = "INFO"
 
-print("BASE_DIR:", BASE_DIR)
-print("env exists:", (BASE_DIR / ".env").exists())
 settings = Settings()  # type: ignore[call-arg]  # 值由 .env 在运行时注入
