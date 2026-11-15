@@ -16,3 +16,7 @@ htmlcov/
 .vscode/
 .idea/
 *.log
+logs/
+
+questions.txt
+progress.txt

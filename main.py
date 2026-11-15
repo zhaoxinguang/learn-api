@@ -1,4 +1,6 @@
 import logging
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -13,12 +15,23 @@ from app.core.exceptions import http_exception_handler, validation_exception_han
 from app.core.middleware import log_requests
 from app.core.config import settings
 
+LOG_DIR = Path(__file__).resolve().parent / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+
 logging.basicConfig(
     level=settings.log_level,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[
+        logging.StreamHandler(),  # 终端仍然能看到
+        RotatingFileHandler(
+            LOG_DIR / "app.log",
+            maxBytes=10 * 1024 * 1024,
+            backupCount=5,
+            encoding="utf-8",
+        ),
+    ],
+    force=True,  
 )
-
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title=settings.app_name)
 
@@ -36,9 +49,11 @@ app.add_middleware(
 app.add_exception_handler(StarletteHTTPException, http_exception_handler) # type: ignore
 app.add_exception_handler(RequestValidationError, validation_exception_handler) # type: ignore
 
+logger = logging.getLogger("todo-api")
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled error: %s %s", request.method, request.url.path)
     return JSONResponse(
         status_code=500,
         content={"code": 500, "message": "Internal Server Error", "path": request.url.path},
@@ -58,3 +73,6 @@ def root():
 @app.get("/health", tags=["health"])
 def health():
     return {"status": "ok"}
+
+
+# python -m uvicorn main:app --reload 

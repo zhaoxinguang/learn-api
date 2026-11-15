@@ -15,6 +15,17 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         headers=getattr(exc, "headers", None),
     )
 
+def _jsonable_errors(errors):
+    cleaned = []
+    for err in errors:
+        item = dict(err)
+        if "ctx" in item:
+            item["ctx"] = {k: str(v) for k, v in item["ctx"].items()}
+        inp = item.get("input")
+        if inp is not None and not isinstance(inp, (str, int, float, bool, list, dict)):
+            item["input"] = repr(inp)
+        cleaned.append(item)
+    return cleaned
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     return JSONResponse(
@@ -22,7 +33,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={
             "code": 422,
             "message": "Validation error",
-            "errors": exc.errors(),   # 保留具体哪个字段错了
+            "errors": _jsonable_errors(exc.errors()),
             "path": request.url.path,
         },
     )
