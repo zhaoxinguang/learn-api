@@ -17,6 +17,7 @@ htmlcov/
 .idea/
 *.log
 logs/
+migrate_test.db
 
 questions.txt
 progress.txt

@@ -22,6 +22,9 @@ alembic upgrade head
 python -m uvicorn main:app --reload
 # 打开 http://127.0.0.1:8000/docs
 
+## GET /todos
+GET /todos?limit=20&offset=0&done=true&sort=-created_at
+
 ## 数据库迁移
 模型变更后，生成并应用迁移：
 alembic revision --autogenerate -m "描述"

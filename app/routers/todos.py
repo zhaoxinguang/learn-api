@@ -1,13 +1,22 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Literal
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app import models
-from app.schemas import TodoCreate, TodoUpdate, TodoOut
+from app.schemas import TodoCreate, TodoUpdate, TodoOut,TodoPage
 from app.dependencies import get_current_user
 
 router = APIRouter(prefix="/todos", tags=["todos"])
 
+SORT_COLUMNS = {
+    "created_at": models.Todo.created_at,
+    "id": models.Todo.id,
+    "title": models.Todo.title,
+}
+
+SortKey = Literal["created_at", "-created_at", "id", "-id", "title", "-title"]
 
 @router.post("", response_model=TodoOut, status_code=201)
 def create_todo(
@@ -21,13 +30,36 @@ def create_todo(
     db.refresh(item)
     return item
 
-
-@router.get("", response_model=list[TodoOut])
+@router.get("", response_model=TodoPage)
 def list_todos(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    done: bool | None = Query(None),
+    sort: SortKey = Query("-created_at"),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    return db.query(models.Todo).filter(models.Todo.owner_id == current_user.id).all()
+    query = db.query(models.Todo).filter(models.Todo.owner_id == current_user.id)
+
+    if done is not None:
+        query = query.filter(models.Todo.done == done)
+
+    total = query.count()
+
+    desc = sort.startswith("-")
+    field = sort.removeprefix("-")
+    column = SORT_COLUMNS[field]
+    order_clause = column.desc() if desc else column.asc()
+
+    items = (
+        query.order_by(order_clause, models.Todo.id.asc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+    return TodoPage(items=items, total=total, limit=limit, offset=offset)
+
 
 
 @router.get("/{todo_id}", response_model=TodoOut)

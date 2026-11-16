@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field, field_validator
+from datetime import datetime
 
 class TodoCreate(BaseModel):
     title: str = Field(min_length=1, max_length=100)
@@ -38,6 +39,16 @@ class TodoOut(BaseModel):
     id: int
     title: str
     done: bool
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+class TodoPage(BaseModel):
+    items: list[TodoOut]
+    total: int
+    limit: int
+    offset: int
 
 class UserCreate(BaseModel):
     username: str = Field(min_length=3, max_length=50)
